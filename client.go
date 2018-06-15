@@ -47,9 +47,21 @@ func NewClient(ClientEndpoint string, ClientKey string, ClientUser string) (*Cli
 
 // Get resource string
 func (c *Client) Get(resource string) ([]byte, int, error) {
-	url := fmt.Sprintf("%s%s", c.domain, resource)
-	logrus.Debugf("URL: %v", url)
-	req, err := http.NewRequest("GET", url, nil)
+	givenUrl := fmt.Sprintf("%s%s", c.domain, resource)
+	v := url.Values{}
+	if c.key != "" {
+		v.Add("api_key", c.key)
+	}
+	if c.user != "" {
+		v.Add("api_username", c.user)
+	}
+
+	if v.Encode() != "" {
+		givenUrl = givenUrl + "?" + v.Encode()
+	}
+
+	logrus.WithField("url", givenUrl).Debug("URL constructed")
+	req, err := http.NewRequest("GET", givenUrl, nil)
 	if err != nil {
 		return nil, 0, err
 	}
